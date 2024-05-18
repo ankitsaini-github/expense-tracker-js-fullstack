@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Expense Tracker App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.8/axios.js" integrity="sha512-pmaEGtUAy7E5gRmwjLqQAD/QWw0dL4Z59b6b+2HQkqQwQ+HcPLLb9/KbUNo5zr10WuXmbivK9nYVZOyDkMgZMg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- <script defer src="app.js"></script> -->
+  </head>
+  <body>
+    <style>
+      html,body{
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: auto;
+        background-color: rgba(36,47,60,255);
+      }
+      .navbarcustom{
+        color: white;
+        background-color: rgba(28,38,48,255);
+      }
+      .formdiv{
+        color:white;
+        font-size: 20px;
+        background-color: rgba(39,50,61,255);
+        padding: 30px;
+        box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 28px, rgba(0, 0, 0, 0.22) 0px 10px 10px;
+        border-radius: 5px;
+      }
+      .required-field::after {
+        content: " * ( Required )";
+        color: rgb(253, 52, 52);
+        font-size: 15px;
+        font-family: initial;
+      }
+      .expenseform{
+        background-color: rgba(48,59,75,255);
+        border-radius: 5px;
+      }
+      .expenselist{
+        color:white;
+        background-color: rgba(39,50,61,255);
+        box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 28px, rgba(0, 0, 0, 0.22) 0px 10px 10px;
+        border-radius: 5px;
+      }
+      .listcustom{
+        color: white;
+        font-size: 20px;
+        font-family:Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        background-color: rgba(48,59,75,255);
+        box-shadow: rgba(0, 0, 0, 0.15) 2.4px 2.4px 3.2px;
+      }
+    </style>
+    <!-- navbar -->
+    <div class="navbar navbar-expand navbarcustom">
+        <div class="container">
+            <h1 class="navbar-brand">EXPENSE TRACKER APP</h1>
+        </div>
+    </div>
+    <br>
+    <!-- form container -->
+    <div class="container formdiv mb-4">
+      <h2 class="title">ADD EXPENSE</h2>
+        <br>
+        <form id="form" class="p-3 expenseform">
+            <label for="amount" class="form-label required-field">Expense Amount : </label><br>
+            <input type="number" class="form-control mr-2" id="amount" placeholder="Expense Amount in Rupees" required><br>
+            <label for="description" class="form-label required-field">Expense Description : </label><br>
+            <input type="text" class="form-control mr-2" id="description" placeholder="Expense Description" required><br>
+            <label for="category" class="form-label required-field">Expense Category : </label><br>
+            <select name="category" id="category" class="form-control mr-2" required>
+                <option value="None" disabled selected>Select your expense category . . .</option>
+                <option value="Food">Food</option>
+                <option value="Utilities">Utilities</option>
+                <option value="Medical & Healthcare">Medical & Healthcare</option>
+                <option value="Entertainment">Entertainment</option>
+                <option value="Travel">Travel</option>
+                <option value="Education">Education</option>
+                <option value="Maintenance and repairs">Maintenance and repairs</option>
+            </select>
+            <input type="text" id="uid" style="display: none;"><br>
+            <div class="d-grid col-6 mx-auto">
+              <input type="submit" class="btn btn-primary" value="Submit">
+            </div> 
+        </form>
+    </div>
+    <br>
+    <!-- expense list container -->
+    <div class="container card card-body expenselist">
+        <h2 class="title mb-3">EXPENSES</h2>
+        <ul id="expenses" class="list-group ">
+          <!-- <li class="list-group-item listcustom">Rs. 1000<br>10 Notebooks<br>Education<button class="btn btn-outline-danger btn-md float-end delete ">X</button><button class="btn btn-outline-secondary btn-md float-end editBtn ">EDIT</button></li> -->
+        </ul>
+    </div>
+  </body>
+
+  <script>
+    const api='http://localhost:3000'
+    var form=document.getElementById('form');
+    var expenseList=document.getElementById('expenses');
+
+    form.addEventListener('submit',addExpense);
+    expenseList.addEventListener('click',removeExpense);
+    expenseList.addEventListener('click',editExpense);
+
+    window.addEventListener('DOMContentLoaded',()=>{
+        axios.get(`${api}/admin/expense`)
+        .then((response)=>{
+            for(let i=0;i<response.data.length;i++){
+                showOnScreen(response.data[i])
+            }
+        })
+        .catch((err)=>{
+            console.log(err)
+        })
+    })
+
+    function showOnScreen(expense){
+
+        var li=document.createElement('li');
+        li.className='list-group-item listcustom';
+        li.appendChild(document.createTextNode('Rs. '));
+        li.appendChild(document.createTextNode(expense.amount));
+        li.appendChild(document.createElement('br'));
+        li.appendChild(document.createTextNode(expense.description));
+        li.appendChild(document.createElement('br'));
+        li.appendChild(document.createTextNode(expense.category));
+
+        var uid=document.createElement('div')
+        uid.style.display='none'
+        uid.appendChild(document.createTextNode(expense.id))
+        li.appendChild(uid)
+
+        var delbtn=document.createElement('button');
+        delbtn.className='btn btn-outline-danger btn-md float-end delete';
+        delbtn.appendChild(document.createTextNode('X'));
+        li.appendChild(delbtn);
+
+        var editbtn=document.createElement('button');
+        editbtn.className='btn btn-outline-secondary btn-md float-end editBtn';
+        editbtn.appendChild(document.createTextNode('EDIT'));
+        li.appendChild(editbtn);
+
+        expenseList.appendChild(li);
+    }
+
+    function addExpense(e){
+        e.preventDefault();
+        var uid=document.getElementById('uid').value
+        var newExpense={
+            amount: document.getElementById('amount').value,
+            description: document.getElementById('description').value,
+            category: document.getElementById('category').value
+        };
+        if(uid.length>0){
+          newExpense.id=uid;
+            axios.post(`${api}/admin/edit-expense`,newExpense)
+                .then((response)=>{
+                location.reload()
+                })
+                .catch((err)=>{console.log(err)})
+                uid='';
+        }
+        else{
+            axios.post(`${api}/admin/add-expense`,newExpense)
+                .then((response)=>{
+                showOnScreen(response.data)
+                })
+                .catch((err)=>{console.log(err)})
+            uid='';
+        }
+
+    }
+
+    function removeExpense(e){
+        if(e.target.classList.contains('delete')){
+            if(confirm('WANT TO DELETE THIS EXPENSE ?')){
+                var li=e.target.parentElement;
+                var uid=li.childNodes[6].firstChild.textContent;
+                axios.post(`${api}/admin/delete-expense`,{id:uid})
+                .then((res)=>{expenseList.removeChild(li);})
+                .catch((err)=>{console.log(err)})
+            }
+        }
+    }
+
+    function editExpense(e){
+        if(e.target.classList.contains('editBtn')){
+            if(confirm('WANT TO EDIT YOUR EXPENSE ?')){
+                var li=e.target.parentElement;
+                document.getElementById('amount').value=li.childNodes[1].textContent;
+                document.getElementById('description').value=li.childNodes[3].textContent;
+                document.getElementById('category').value=li.childNodes[5].textContent;
+                document.getElementById('uid').value=li.childNodes[6].firstChild.textContent;
+            }
+        }
+    }
+
+  </script>
+</html>
